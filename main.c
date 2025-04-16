@@ -200,3 +200,60 @@ void vender(Usuario* u) {
     registrar_transacao(u, "venda", moedas[opc-1], valor, taxa);
     printf("Venda realizada.\n");
 }
+
+// tem por objetivo gerar o extrato do usuario
+void extrato(Usuario* u) {
+    char nome_arquivo[30];
+    sprintf(nome_arquivo, "extrato_%s.txt", u->cpf);
+    FILE* f = fopen(nome_arquivo, "w");
+    for (int i = 0; i < u->transacoes_count; i++) {
+        Transacao* t = &u->transacoes[i];
+        fprintf(f, "%s | %s | R$ %.2f | Taxa %.2f | %s\n", t->tipo, t->moeda, t->valor, t->taxa, t->data);
+    }
+    fclose(f);
+    printf("Extrato salvo em %s\n", nome_arquivo);
+}
+
+// a função main é a mais importante, juntando todas as funções
+int main() {
+    srand(time(NULL));
+    carregar_usuarios();
+
+    if (total_usuarios == 0) {
+        printf("Nenhum usuário cadastrado.\n");
+        criar_usuario(); // cadastrar o primeiro usuário
+    }
+
+    char cpf[15], senha[20];
+    printf("CPF: "); scanf("%s", cpf);
+    printf("Senha: "); scanf("%s", senha);
+    int id = autenticar(cpf, senha);
+
+    if (id == -1) {
+        printf("Login falhou.\n");
+        return 1;
+    }
+
+    Usuario* u = &usuarios[id];
+    int opc;
+    do {
+        printf("\n1. Consultar Saldo\n2. Depositar\n3. Sacar\n4. Comprar\n5. Vender\n6. Extrato\n7. Atualizar Cotação\n0. Sair\nOpção: ");
+        scanf("%d", &opc);
+
+        // para a opcao selecionada chama a determinada função
+        switch(opc) {
+            case 1: consultar_saldo(u); break;
+            case 2: depositar(u); break;
+            case 3: sacar(u); break;
+            case 4: comprar(u); break;
+            case 5: vender(u); break;
+            case 6: extrato(u); break;
+            case 7: atualizar_cotacoes(); break;
+        }
+        salvar_usuarios();
+    } while(opc != 0);
+
+    // Enquanto a opção for diferente de 0 o programa continua rodando, assim evitando finalizar
+
+    return 0;
+}
